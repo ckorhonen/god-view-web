@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>API Test - God View</title>
+<style>
+body { font-family: monospace; padding: 20px; background: #0a0e27; color: #fff; }
+button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 10px 5px; }
+pre { background: #1a1f3a; padding: 15px; border-radius: 8px; overflow-x: auto; }
+input { padding: 10px; width: 600px; font-family: monospace; }
+.success { color: #00ff88; }
+.error { color: #ff4444; }
+</style>
+</head>
+<body>
+<h1>🌀 God View - API Test</h1>
+<p>Paste your Anthropic API key below to test:</p>
+<input type="password" id="api-key" placeholder="sk-ant-..." style="display:block; margin-bottom:10px">
+<button onclick="testAPI()">🧪 Test API Call</button>
+<button onclick="testMain()">🚀 Test Main App Logic</button>
+<pre id="output">Ready to test...</pre>
+
+<script>
+async function testAPI() {
+  const output = document.getElementById('output');
+  const apiKey = document.getElementById('api-key').value.trim();
+  
+  if (!apiKey) {
+    output.textContent = '❌ Please enter your API key first';
+    return;
+  }
+  
+  output.textContent = '⏳ Testing API call...';
+  
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-haiku-20240307',
+        max_tokens: 50,
+        messages: [{role: 'user', content: 'Say hello in 5 words'}]
+      })
+    });
+    
+    const data = await response.json();
+    
+    let result = 'Response:\n' + JSON.stringify(data, null, 2);
+    
+    if (data.content && data.content[0]) {
+      result += '\n\n✅ SUCCESS!\n';
+      result += 'Claude said: ' + data.content[0].text;
+      output.className = 'success';
+    } else if (data.error) {
+      result += '\n\n❌ ERROR:\n';
+      result += 'Type: ' + data.error.type + '\n';
+      result += 'Message: ' + data.error.message;
+      output.className = 'error';
+    }
+    
+    output.textContent = result;
+  } catch (error) {
+    output.textContent = '❌ FETCH ERROR:\n' + error.message + '\n\nStack:\n' + error.stack;
+    output.className = 'error';
+  }
+}
+
+async function testMain() {
+  const output = document.getElementById('output');
+  const apiKey = document.getElementById('api-key').value.trim();
+  
+  if (!apiKey) {
+    output.textContent = '❌ Please enter your API key first';
+    return;
+  }
+  
+  output.textContent = '⏳ Testing main app agent logic...';
+  
+  // Simulate one agent thinking
+  const agent = {
+    name: 'Bull',
+    personality: 'optimistic',
+    memory: []
+  };
+  
+  const context = 'Simulation just started.';
+  const systemPrompt = `You are ${agent.name}, a ${agent.personality} AI agent.
+
+Recent events:
+${context}
+
+Your memories:
+None yet.
+
+Respond with ONE action (1-2 sentences).`;
+  
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-haiku-20240307',
+        max_tokens: 150,
+        temperature: 0.8,
+        system: systemPrompt,
+        messages: [{role: 'user', content: 'What do you do next?'}]
+      })
+    });
+    
+    const data = await response.json();
+    
+    let result = 'Agent: ' + agent.name + ' (' + agent.personality + ')\n\n';
+    
+    if (data.content && data.content[0]) {
+      const action = data.content[0].text;
+      result += '✅ SUCCESS!\n\n';
+      result += 'Bull says:\n' + action + '\n\n';
+      result += 'Full response:\n' + JSON.stringify(data, null, 2);
+      output.className = 'success';
+    } else if (data.error) {
+      result += '❌ ERROR:\n';
+      result += 'Type: ' + data.error.type + '\n';
+      result += 'Message: ' + data.error.message + '\n\n';
+      result += 'Full response:\n' + JSON.stringify(data, null, 2);
+      output.className = 'error';
+    }
+    
+    output.textContent = result;
+  } catch (error) {
+    output.textContent = '❌ ERROR:\n' + error.message + '\n\nStack:\n' + error.stack;
+    output.className = 'error';
+  }
+}
+</script>
+</body>
+</html>
